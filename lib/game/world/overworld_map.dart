@@ -1,0 +1,150 @@
+import 'package:bonfire/bonfire.dart';
+import 'package:bonfire/map/base/layer.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/widgets.dart' show VoidCallback;
+import 'package:xml/xml.dart';
+import 'tiles/tiles.dart';
+
+class MapLoader {
+  /// Parses the isometric TMX map and generates the list of Tiles
+  /// and interactive components (like pyres and portals).
+  static Future<MapLoadResult> load(
+    String tmxAssetPath, {
+    required Function(int) onPyreLit,
+    required VoidCallback onPortalTrigger,
+    required Sprite pyreUnlitSprite,
+    bool isPortalActive = true,
+  }) async {
+    final tmxString = await rootBundle.loadString(tmxAssetPath);
+    final document = XmlDocument.parse(tmxString);
+    final mapElement = document.rootElement;
+
+    final width = int.parse(mapElement.getAttribute('width')!);
+    final height = int.parse(mapElement.getAttribute('height')!);
+    
+    final dataElement = document.findAllElements('data').first;
+    final csvText = dataElement.text.trim();
+    final tileIds = csvText.split(',').map((e) => int.parse(e.trim())).toList();
+
+    final List<Tile> tiles = [];
+    final List<GameComponent> dynamicComponents = [];
+    final List<Vector2> enemySpawnPoints = [];
+    Vector2 playerSpawnPoint = Vector2(64, 64); // fallback spawn
+
+    // Map origin offset to center it visually
+    const double originX = 200.0;
+    const double originY = 50.0;
+
+    int pyreCount = 0;
+
+    for (int row = 0; row < height; row++) {
+      for (int col = 0; col < width; col++) {
+        final index = row * width + col;
+        if (index >= tileIds.length) continue;
+        final tileId = tileIds[index];
+
+        // Screen coordinate (isometric projection)
+        // Diamond width=64, height=32. Center spacing: X step is 32, Y step is 16.
+        final double screenX = originX + (col - row) * 32.0;
+        final double screenY = originY + (col + row) * 16.0;
+        
+        // Draw floor underneath everything (except wall outer border tile blocks maybe, but floor underneath is safer)
+        if (tileId != 0) {
+          tiles.add(
+            Tile(
+              x: screenX,
+              y: screenY - 16, // Offset to center 64x64 sprite floor line on the grid coordinate
+              width: 64,
+              height: 64,
+              sprite: TileSprite(
+                path: 'tileset.png',
+                position: Vector2(0, 0),
+                size: Vector2(64, 64),
+              ),
+            ),
+          );
+        }
+
+        if (tileId == 1) {
+          // Floor only, already added floor above
+          // Set player spawn point to the first open floor tile in the middle-ish
+          if (row == height ~/ 2 && col == width ~/ 2) {
+            playerSpawnPoint = Vector2(screenX + 16, screenY);
+          }
+        } else if (tileId == 2) {
+          // Wall (index 2 in TMX corresponds to Column 1, Row 0 in tileset = x:64, y:0)
+          tiles.add(
+            Tile(
+              x: screenX,
+              y: screenY - 16,
+              width: 64,
+              height: 64,
+              sprite: TileSprite(
+                path: 'tileset.png',
+                position: Vector2(64, 0),
+                size: Vector2(64, 64),
+              ),
+              collisions: [
+                RectangleHitbox(
+                  size: Vector2(24, 16),
+                  position: Vector2(20, 36),
+                ),
+              ],
+            ),
+          );
+        } else if (tileId == 3) {
+          // Pyre location
+          pyreCount++;
+          dynamicComponents.add(
+            PyreComponent(
+              id: pyreCount,
+              position: Vector2(screenX, screenY - 16),
+              onLit: () => onPyreLit(pyreCount),
+              unlitSprite: pyreUnlitSprite,
+            ),
+          );
+        } else if (tileId == 4) {
+          // Portal location
+          dynamicComponents.add(
+            PortalComponent(
+              position: Vector2(screenX, screenY - 16),
+              onTrigger: onPortalTrigger,
+              isActive: isPortalActive,
+            ),
+          );
+        }
+
+        // Spawn shadow enemies at random floor tiles that are not near spawn point
+        if (tileId == 1 && (row != height ~/ 2 && col != width ~/ 2)) {
+          // Add enemy spawns for 15% of floor tiles in level maps
+          if ((row + col) % 7 == 0) {
+            enemySpawnPoints.add(Vector2(screenX + 16, screenY));
+          }
+        }
+      }
+    }
+
+    return MapLoadResult(
+      map: WorldMap([
+        Layer(id: 1, tiles: tiles),
+      ]),
+      components: dynamicComponents,
+      playerSpawn: playerSpawnPoint,
+      enemySpawns: enemySpawnPoints,
+    );
+  }
+}
+
+class MapLoadResult {
+  final WorldMap map;
+  final List<GameComponent> components;
+  final Vector2 playerSpawn;
+  final List<Vector2> enemySpawns;
+
+  MapLoadResult({
+    required this.map,
+    required this.components,
+    required this.playerSpawn,
+    required this.enemySpawns,
+  });
+}
