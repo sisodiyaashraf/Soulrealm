@@ -101,12 +101,14 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
     // Map parsing
     final mapPath = widget.isOverworld ? 'assets/tiles/overworld.tmx' : 'assets/tiles/level_${widget.levelId}.tmx';
+    final unlockedLevels = _saveService.getUnlockedLevels();
     _mapData = await MapLoader.load(
       mapPath,
       pyreUnlitSprite: _unlitPyreSprite,
       onPyreLit: _onPyreLit,
       onPortalTrigger: _onPortalTrigger,
-      isPortalActive: widget.isOverworld, // Overworld portal is active from start
+      isPortalActive: !widget.isOverworld, // Level portal starts inactive (until pyres are lit)
+      unlockedLevels: unlockedLevels,
     );
 
     if (widget.isOverworld) {
@@ -138,10 +140,20 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
     });
   }
 
-  void _onPortalTrigger() {
+  void _onPortalTrigger(int targetLevelId) {
     if (widget.isOverworld) {
-      // Overworld portal returns to level selection map
-      Navigator.pop(context);
+      // Launch target level
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => SoulrealmGameWidget(
+            levelId: targetLevelId,
+            isOverworld: false,
+          ),
+        ),
+      ).then((_) {
+        // Refresh unlocked portals when returning
+        _initGameData();
+      });
     } else {
       // Completing a level
       _winLevel();
@@ -221,14 +233,14 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
     // Set up joystick
     final joystick = Joystick(
       directional: JoystickDirectional(
-        color: const Color(0xFF00E5FF).withOpacity(0.6),
+        color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
         size: 80,
       ),
       actions: [
         JoystickAction(
           actionId: 1,
           margin: const EdgeInsets.all(40),
-          color: const Color(0xFFFF2A85).withOpacity(0.8),
+          color: const Color(0xFFFF2A85).withValues(alpha: 0.8),
           size: 50,
         ),
       ],
@@ -259,6 +271,12 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
               moveOnlyMapArea: true,
               zoom: 1.5,
             ),
+            colorFilter: widget.isOverworld
+                ? GameColorFilter(
+                    color: const Color(0xFF4C5C8C).withValues(alpha: 0.25),
+                    blendMode: BlendMode.colorBurn,
+                  )
+                : null,
             overlayBuilderMap: {
               'hud': (context, game) => HudOverlay(
                 levelName: widget.isOverworld ? 'OVERWORLD' : 'STAGE ${widget.levelId}',
@@ -329,7 +347,7 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
   Widget _buildLevelCompleteOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.7),
       child: Center(
         child: Container(
           width: 300,
@@ -340,7 +358,7 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
             border: Border.all(color: const Color(0xFF00E5FF), width: 2),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withOpacity(0.4),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
                 blurRadius: 20,
               ),
             ],
@@ -384,7 +402,7 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
   Widget _buildGameOverOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.8),
+      color: Colors.black.withValues(alpha: 0.8),
       child: Center(
         child: Container(
           width: 300,

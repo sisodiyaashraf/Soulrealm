@@ -40,22 +40,18 @@ class TilesetGenerator {
 
   static void _drawFloorTile(Canvas canvas, double ox, double oy) {
     final path = Path()
-      ..moveTo(ox + 32, oy + 16)  // Top
-      ..lineTo(ox + 64, oy + 32)  // Right
-      ..lineTo(ox + 32, oy + 48)  // Bottom
-      ..lineTo(ox, oy + 32)       // Left
+      ..moveTo(ox + 32, oy + 16) // Top
+      ..lineTo(ox + 64, oy + 32) // Right
+      ..lineTo(ox + 32, oy + 48) // Bottom
+      ..lineTo(ox, oy + 32) // Left
       ..close();
 
     // Fill with gradient
     final fillPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        Offset(ox + 32, oy + 32),
-        24,
-        [
-          const Color(0xFF1B1E36),
-          const Color(0xFF0C0E1A),
-        ],
-      );
+      ..shader = ui.Gradient.radial(Offset(ox + 32, oy + 32), 24, [
+        const Color(0xFF1B1E36),
+        const Color(0xFF0C0E1A),
+      ]);
     canvas.drawPath(path, fillPaint);
 
     // Border
@@ -67,10 +63,10 @@ class TilesetGenerator {
 
     // Subtle runic groove
     final groovePaint = Paint()
-      ..color = const Color(0xFF00E5FF).withOpacity(0.3)
+      ..color = const Color(0xFF00E5FF).withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
-    
+
     final groovePath = Path()
       ..moveTo(ox + 32, oy + 24)
       ..lineTo(ox + 48, oy + 32)
@@ -82,13 +78,6 @@ class TilesetGenerator {
 
   static void _drawWallTile(Canvas canvas, double ox, double oy) {
     // A vertical pillar with isometric top and faces
-    // Floor footprint (bottom diamond)
-    final bottomPath = Path()
-      ..moveTo(ox + 32, oy + 48)
-      ..lineTo(ox + 64, oy + 56)
-      ..lineTo(ox + 32, oy + 64)
-      ..lineTo(ox, oy + 56)
-      ..close();
 
     // Top cap (top diamond, shifted up)
     final topPath = Path()
@@ -119,10 +108,7 @@ class TilesetGenerator {
       ..shader = ui.Gradient.linear(
         Offset(ox, oy + 20),
         Offset(ox + 32, oy + 64),
-        [
-          const Color(0xFF1D2030),
-          const Color(0xFF0F101A),
-        ],
+        [const Color(0xFF1D2030), const Color(0xFF0F101A)],
       );
     canvas.drawPath(leftFace, leftPaint);
 
@@ -131,33 +117,34 @@ class TilesetGenerator {
       ..shader = ui.Gradient.linear(
         Offset(ox + 32, oy + 32),
         Offset(ox + 64, oy + 64),
-        [
-          const Color(0xFF2C324D),
-          const Color(0xFF181C2E),
-        ],
+        [const Color(0xFF2C324D), const Color(0xFF181C2E)],
       );
     canvas.drawPath(rightFace, rightPaint);
 
     // Paint top cap
     final topPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        Offset(ox + 32, oy + 20),
-        20,
-        [
-          const Color(0xFF3D4770),
-          const Color(0xFF222740),
-        ],
-      );
+      ..shader = ui.Gradient.radial(Offset(ox + 32, oy + 20), 20, [
+        const Color(0xFF3D4770),
+        const Color(0xFF222740),
+      ]);
     canvas.drawPath(topPath, topPaint);
 
     // Glowing glyph in the center of faces
     final glyphPaint = Paint()
-      ..color = const Color(0xFFFF2A85).withOpacity(0.7)
+      ..color = const Color(0xFFFF2A85).withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    canvas.drawLine(Offset(ox + 16, oy + 36), Offset(ox + 16, oy + 48), glyphPaint);
-    canvas.drawLine(Offset(ox + 48, oy + 36), Offset(ox + 48, oy + 48), glyphPaint);
+    canvas.drawLine(
+      Offset(ox + 16, oy + 36),
+      Offset(ox + 16, oy + 48),
+      glyphPaint,
+    );
+    canvas.drawLine(
+      Offset(ox + 48, oy + 36),
+      Offset(ox + 48, oy + 48),
+      glyphPaint,
+    );
 
     // Outer outlines
     final outlinePaint = Paint()
@@ -198,8 +185,16 @@ class TilesetGenerator {
     final ironPaint = Paint()
       ..color = const Color(0xFF0F1122)
       ..strokeWidth = 2.0;
-    canvas.drawLine(Offset(ox + 20, oy + 42), Offset(ox + 22, oy + 29), ironPaint);
-    canvas.drawLine(Offset(ox + 44, oy + 42), Offset(ox + 42, oy + 29), ironPaint);
+    canvas.drawLine(
+      Offset(ox + 20, oy + 42),
+      Offset(ox + 22, oy + 29),
+      ironPaint,
+    );
+    canvas.drawLine(
+      Offset(ox + 44, oy + 42),
+      Offset(ox + 42, oy + 29),
+      ironPaint,
+    );
   }
 
   static void _drawPortalTile(Canvas canvas, double ox, double oy) {
@@ -213,17 +208,21 @@ class TilesetGenerator {
         16,
         [
           const Color(0xFF00E5FF),
-          const Color(0xFF005B9F).withOpacity(0.5),
+          const Color(0xFF005B9F).withValues(alpha: 0.5),
           const Color(0x00000000),
         ],
+        [0.0, 0.5, 1.0],
       );
-    canvas.drawOval(Rect.fromLTRB(ox + 16, oy + 24, ox + 48, oy + 40), portalPaint);
+    canvas.drawOval(
+      Rect.fromLTRB(ox + 16, oy + 24, ox + 48, oy + 40),
+      portalPaint,
+    );
 
     final swirlPaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    
+
     canvas.drawArc(
       Rect.fromLTRB(ox + 20, oy + 26, ox + 44, oy + 38),
       0,
@@ -248,7 +247,10 @@ class TilesetGenerator {
     final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 128, 64));
 
     // Clear bg
-    canvas.drawRect(const Rect.fromLTWH(0, 0, 128, 64), Paint()..color = const Color(0x00000000));
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, 128, 64),
+      Paint()..color = const Color(0x00000000),
+    );
 
     // Draw 4 frames of idle (Row 0, y=0)
     for (int i = 0; i < 4; i++) {
@@ -256,7 +258,13 @@ class TilesetGenerator {
       double oy = 0.0;
       // Floating offset
       double floatY = (i == 0 || i == 2) ? 0.0 : (i == 1 ? -2.0 : 2.0);
-      _drawSpirit(canvas, ox + 16, oy + 16 + floatY, const Color(0xFF00E5FF), const Color(0xFF005B9F));
+      _drawSpirit(
+        canvas,
+        ox + 16,
+        oy + 16 + floatY,
+        const Color(0xFF00E5FF),
+        const Color(0xFF005B9F),
+      );
     }
 
     // Draw 4 frames of walk (Row 1, y=32)
@@ -265,7 +273,14 @@ class TilesetGenerator {
       double oy = 32.0;
       double floatY = (i % 2 == 0) ? -1.0 : 1.0;
       // Walk has a trailing spirit tail
-      _drawSpirit(canvas, ox + 16, oy + 16 + floatY, const Color(0xFF00E5FF), const Color(0xFF005B9F), walkFrame: i);
+      _drawSpirit(
+        canvas,
+        ox + 16,
+        oy + 16 + floatY,
+        const Color(0xFF00E5FF),
+        const Color(0xFF005B9F),
+        walkFrame: i,
+      );
     }
 
     final picture = recorder.endRecording();
@@ -280,14 +295,23 @@ class TilesetGenerator {
     final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 128, 64));
 
     // Clear bg
-    canvas.drawRect(const Rect.fromLTWH(0, 0, 128, 64), Paint()..color = const Color(0x00000000));
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, 128, 64),
+      Paint()..color = const Color(0x00000000),
+    );
 
     // Draw 4 frames of idle (Row 0, y=0)
     for (int i = 0; i < 4; i++) {
       double ox = i * 32.0;
       double oy = 0.0;
       double floatY = (i == 0 || i == 2) ? 0.0 : (i == 1 ? -1.5 : 1.5);
-      _drawSpirit(canvas, ox + 16, oy + 16 + floatY, const Color(0xFFFF2A85), const Color(0xFF5F0033));
+      _drawSpirit(
+        canvas,
+        ox + 16,
+        oy + 16 + floatY,
+        const Color(0xFFFF2A85),
+        const Color(0xFF5F0033),
+      );
     }
 
     // Draw 4 frames of walk (Row 1, y=32)
@@ -295,37 +319,44 @@ class TilesetGenerator {
       double ox = i * 32.0;
       double oy = 32.0;
       double floatY = (i % 2 == 0) ? -1.0 : 1.0;
-      _drawSpirit(canvas, ox + 16, oy + 16 + floatY, const Color(0xFFFF2A85), const Color(0xFF5F0033), walkFrame: i);
+      _drawSpirit(
+        canvas,
+        ox + 16,
+        oy + 16 + floatY,
+        const Color(0xFFFF2A85),
+        const Color(0xFF5F0033),
+        walkFrame: i,
+      );
     }
 
     final picture = recorder.endRecording();
     return await picture.toImage(128, 64);
   }
 
-  static void _drawSpirit(Canvas canvas, double cx, double cy, Color primary, Color secondary, {int? walkFrame}) {
+  static void _drawSpirit(
+    Canvas canvas,
+    double cx,
+    double cy,
+    Color primary,
+    Color secondary, {
+    int? walkFrame,
+  }) {
     // Body (glowing droplet shape)
     final glowPaint = Paint()
       ..shader = ui.Gradient.radial(
         Offset(cx, cy),
         12,
-        [
-          primary,
-          secondary.withOpacity(0.3),
-          const Color(0x00000000),
-        ],
+        [primary, secondary.withValues(alpha: 0.3), const Color(0x00000000)],
+        [0.0, 0.5, 1.0],
       );
     canvas.drawCircle(Offset(cx, cy), 12, glowPaint);
 
     final bodyPaint = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(cx, cy - 8),
-        Offset(cx, cy + 8),
-        [
-          Colors.white,
-          primary,
-        ],
-      );
-    
+      ..shader = ui.Gradient.linear(Offset(cx, cy - 8), Offset(cx, cy + 8), [
+        Colors.white,
+        primary,
+      ]);
+
     // Main circular head/hood
     canvas.drawCircle(Offset(cx, cy - 2), 6, bodyPaint);
 
@@ -357,14 +388,10 @@ class TilesetGenerator {
     tailPath.close();
 
     final tailPaint = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(cx, cy),
-        Offset(cx, cy + 12),
-        [
-          primary,
-          secondary.withOpacity(0.1),
-        ],
-      );
+      ..shader = ui.Gradient.linear(Offset(cx, cy), Offset(cx, cy + 12), [
+        primary,
+        secondary.withValues(alpha: 0.1),
+      ]);
     canvas.drawPath(tailPath, tailPaint);
   }
 }

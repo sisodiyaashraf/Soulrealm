@@ -12,20 +12,24 @@ class PyreComponent extends GameComponent with Attackable {
 
   PyreComponent({
     required this.id,
-    required Vector2 position,
+    required Vector2 initialPosition,
     required this.onLit,
     required this.unlitSprite,
   }) {
-    this.position = position;
-    this.size = Vector2(64, 64);
-    
-    // Set up collision for the base of the pyre
+    position = initialPosition;
+    size = Vector2(64, 64);
+  }
+
+  @override
+  Future<void> onLoad() async {
+    size = Vector2(64, 64);
     add(
       RectangleHitbox(
         size: Vector2(24, 16),
         position: Vector2(20, 36),
       ),
     );
+    await super.onLoad();
   }
 
   void lightUp() {
@@ -45,8 +49,8 @@ class PyreComponent extends GameComponent with Attackable {
     // Draw the static bowl/pedestal underneath
     unlitSprite.render(
       canvas,
-      position: Vector2(0, 0),
-      size: size,
+      position: Vector2.zero(),
+      size: Vector2(64, 64),
     );
 
     if (isLit) {
@@ -65,8 +69,8 @@ class PyreComponent extends GameComponent with Attackable {
       final glowPaint = Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFFFA726).withOpacity(0.8),
-            const Color(0xFFFF3D00).withOpacity(0.3),
+            const Color(0xFFFFA726).withValues(alpha: 0.8),
+            const Color(0xFFFF3D00).withValues(alpha: 0.3),
             const Color(0x00000000),
           ],
         ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: 18 * pulse));
@@ -78,7 +82,7 @@ class PyreComponent extends GameComponent with Attackable {
           colors: [
             Colors.white,
             const Color(0xFFFFEA00),
-            const Color(0xFFFF5722).withOpacity(0.1),
+            const Color(0xFFFF5722).withValues(alpha: 0.1),
           ],
         ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: 8 * pulse));
       
@@ -109,20 +113,24 @@ class PortalComponent extends GameComponent with Sensor {
   double _time = 0.0;
 
   PortalComponent({
-    required Vector2 position,
+    required Vector2 initialPosition,
     required this.onTrigger,
     this.isActive = true,
   }) {
-    this.position = position;
-    this.size = Vector2(64, 64);
-    
-    // Setup overlapping area (sensor)
+    position = initialPosition;
+    size = Vector2(64, 64);
+  }
+
+  @override
+  Future<void> onLoad() async {
+    size = Vector2(64, 64);
     add(
       RectangleHitbox(
         size: Vector2(32, 16),
         position: Vector2(16, 24),
       ),
     );
+    await super.onLoad();
   }
 
   @override
@@ -144,17 +152,17 @@ class PortalComponent extends GameComponent with Sensor {
 
   @override
   void render(Canvas canvas) {
+    final cx = size.x / 2;
+    final cy = size.y / 2;
     if (isActive) {
       canvas.save();
-      final cx = size.x / 2;
-      final cy = size.y / 2;
 
       // Draw background portal glow
       final glowPaint = Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFF00E5FF).withOpacity(0.7),
-            const Color(0xFF005B9F).withOpacity(0.3),
+            const Color(0xFF00E5FF).withValues(alpha: 0.7),
+            const Color(0xFF005B9F).withValues(alpha: 0.3),
             const Color(0x00000000),
           ],
         ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: 24));
@@ -162,7 +170,7 @@ class PortalComponent extends GameComponent with Sensor {
 
       // Draw swirling portal rings
       final ringPaint = Paint()
-        ..color = Colors.white.withOpacity(0.8)
+        ..color = Colors.white.withValues(alpha: 0.8)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
 
@@ -180,6 +188,16 @@ class PortalComponent extends GameComponent with Sensor {
       }
 
       canvas.restore();
+    } else {
+      // Draw dimmed, locked visual state (faint grey oval with center lock icon dot)
+      final lockPaint = Paint()
+        ..color = Colors.white10
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
+      canvas.drawOval(Rect.fromLTRB(cx - 16, cy - 8, cx + 16, cy + 8), lockPaint);
+
+      final dotPaint = Paint()..color = Colors.white12;
+      canvas.drawCircle(Offset(cx, cy), 2, dotPaint);
     }
   }
 }

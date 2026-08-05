@@ -95,11 +95,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: const Color(0xFF4C8CFF).withOpacity(0.8),
+                          color: const Color(0xFF4C8CFF).withValues(alpha: 0.8),
                           blurRadius: 20,
                         ),
                         Shadow(
-                          color: const Color(0xFF00E5FF).withOpacity(0.5),
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.5),
                           blurRadius: 40,
                         ),
                       ],
@@ -114,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       letterSpacing: 4,
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -125,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color(0xFF00E5FF).withOpacity(0.8),
+                        const Color(0xFF00E5FF).withValues(alpha: 0.8),
                       ),
                     ),
                   ),

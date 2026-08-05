@@ -29,9 +29,12 @@ class HudOverlay extends StatelessWidget {
               children: [
                 // Health Hearts Bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F121F).withOpacity(0.85),
+                    color: const Color(0xFF0F121F).withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white10),
                   ),
@@ -41,7 +44,9 @@ class HudOverlay extends StatelessWidget {
                       final isFull = hp >= heartVal;
                       return Icon(
                         Icons.favorite,
-                        color: isFull ? const Color(0xFF00E5FF) : Colors.white10,
+                        color: isFull
+                            ? const Color(0xFF00E5FF)
+                            : Colors.white10,
                         size: 24,
                       );
                     }),
@@ -49,9 +54,12 @@ class HudOverlay extends StatelessWidget {
                 ),
                 // Level Name / Progress Info
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F121F).withOpacity(0.85),
+                    color: const Color(0xFF0F121F).withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white10),
                   ),
@@ -82,9 +90,12 @@ class HudOverlay extends StatelessWidget {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F121F).withOpacity(0.85),
+                    color: const Color(0xFF0F121F).withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: litPyres >= totalPyres
@@ -95,7 +106,9 @@ class HudOverlay extends StatelessWidget {
                     boxShadow: litPyres >= totalPyres
                         ? [
                             BoxShadow(
-                              color: const Color(0xFF00E5FF).withOpacity(0.3),
+                              color: const Color(
+                                0xFF00E5FF,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 10,
                               spreadRadius: 1,
                             ),

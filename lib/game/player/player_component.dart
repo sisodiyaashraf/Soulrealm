@@ -10,13 +10,12 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
   final VoidCallback onDeath;
 
   PlayerComponent({
-    required Vector2 position,
+    required super.position,
     required SpriteAnimation idleRightAnimation,
     required SpriteAnimation runRightAnimation,
     required this.onHealthChanged,
     required this.onDeath,
   }) : super(
-          position: position,
           size: Vector2(32, 32),
           life: maxHealth,
           speed: 120.0,
@@ -24,24 +23,17 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
             idleRight: idleRightAnimation,
             runRight: runRightAnimation,
           ),
-        ) {
-    // Add hitbox
+        );
+
+  @override
+  Future<void> onLoad() async {
     add(
       RectangleHitbox(
         size: Vector2(20, 16),
         position: Vector2(6, 12),
       ),
     );
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
+    await super.onLoad();
   }
 
   // Receive damage

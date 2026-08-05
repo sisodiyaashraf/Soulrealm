@@ -10,11 +10,10 @@ class EnemyComponent extends SimpleEnemy with BlockMovementCollision {
   int _patrolDirectionIndex = 0;
 
   EnemyComponent({
-    required Vector2 position,
+    required super.position,
     required SpriteAnimation idleRightAnimation,
     required SpriteAnimation runRightAnimation,
   }) : super(
-          position: position,
           size: Vector2(32, 32),
           life: 2.0,
           speed: 80.0,
@@ -22,14 +21,17 @@ class EnemyComponent extends SimpleEnemy with BlockMovementCollision {
             idleRight: idleRightAnimation,
             runRight: runRightAnimation,
           ),
-        ) {
-    // Add hitbox
+        );
+
+  @override
+  Future<void> onLoad() async {
     add(
       RectangleHitbox(
         size: Vector2(20, 16),
         position: Vector2(6, 12),
       ),
     );
+    await super.onLoad();
   }
 
   @override

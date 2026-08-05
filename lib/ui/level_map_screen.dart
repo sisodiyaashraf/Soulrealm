@@ -194,11 +194,11 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
     if (isCompleted) {
       nodeColor = const Color(0xFF00E5FF);
       icon = Icons.done_all;
-      shadows = [BoxShadow(color: const Color(0xFF00E5FF).withOpacity(0.5), blurRadius: 15, spreadRadius: 2)];
+      shadows = [BoxShadow(color: const Color(0xFF00E5FF).withValues(alpha: 0.5), blurRadius: 15, spreadRadius: 2)];
     } else if (isUnlocked) {
       nodeColor = const Color(0xFFFF2A85);
       icon = Icons.play_arrow;
-      shadows = [BoxShadow(color: const Color(0xFFFF2A85).withOpacity(0.5), blurRadius: 15, spreadRadius: 2)];
+      shadows = [BoxShadow(color: const Color(0xFFFF2A85).withValues(alpha: 0.5), blurRadius: 15, spreadRadius: 2)];
     }
 
     return GestureDetector(
@@ -221,7 +221,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F121F).withOpacity(0.8),
+              color: const Color(0xFF0F121F).withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.white10),
             ),
@@ -258,7 +258,7 @@ class PathPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF333D6B).withOpacity(0.3)
+      ..color = const Color(0xFF333D6B).withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;

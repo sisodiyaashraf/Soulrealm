@@ -1,7 +1,6 @@
 import 'package:bonfire/bonfire.dart';
 import 'package:bonfire/map/base/layer.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/widgets.dart' show VoidCallback;
 import 'package:xml/xml.dart';
 import 'tiles/tiles.dart';
 
@@ -11,9 +10,10 @@ class MapLoader {
   static Future<MapLoadResult> load(
     String tmxAssetPath, {
     required Function(int) onPyreLit,
-    required VoidCallback onPortalTrigger,
+    required Function(int) onPortalTrigger,
     required Sprite pyreUnlitSprite,
     bool isPortalActive = true,
+    required List<int> unlockedLevels,
   }) async {
     final tmxString = await rootBundle.loadString(tmxAssetPath);
     final document = XmlDocument.parse(tmxString);
@@ -23,7 +23,7 @@ class MapLoader {
     final height = int.parse(mapElement.getAttribute('height')!);
     
     final dataElement = document.findAllElements('data').first;
-    final csvText = dataElement.text.trim();
+    final csvText = dataElement.innerText.trim();
     final tileIds = csvText.split(',').map((e) => int.parse(e.trim())).toList();
 
     final List<Tile> tiles = [];
@@ -36,6 +36,7 @@ class MapLoader {
     const double originY = 50.0;
 
     int pyreCount = 0;
+    int portalCount = 0;
 
     for (int row = 0; row < height; row++) {
       for (int col = 0; col < width; col++) {
@@ -98,18 +99,24 @@ class MapLoader {
           dynamicComponents.add(
             PyreComponent(
               id: pyreCount,
-              position: Vector2(screenX, screenY - 16),
+              initialPosition: Vector2(screenX, screenY - 16),
               onLit: () => onPyreLit(pyreCount),
               unlitSprite: pyreUnlitSprite,
             ),
           );
         } else if (tileId == 4) {
           // Portal location
+          portalCount++;
+          final targetLevelId = portalCount;
+          final isThisPortalActive = tmxAssetPath.contains('overworld')
+              ? unlockedLevels.contains(targetLevelId)
+              : isPortalActive;
+
           dynamicComponents.add(
             PortalComponent(
-              position: Vector2(screenX, screenY - 16),
-              onTrigger: onPortalTrigger,
-              isActive: isPortalActive,
+              initialPosition: Vector2(screenX, screenY - 16),
+              onTrigger: () => onPortalTrigger(targetLevelId),
+              isActive: isThisPortalActive,
             ),
           );
         }
