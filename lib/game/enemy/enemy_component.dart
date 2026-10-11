@@ -1,8 +1,9 @@
-import 'dart:math' as math;
-import 'package:bonfire/bonfire.dart';
+import '../world/items/soul_shard_component.dart';
 
 class EnemyComponent extends SimpleEnemy with BlockMovementCollision {
   final double attackDamage = 1.0;
+  final SpriteAnimation? shardAnimation;
+  final VoidCallback? onShardCollected;
   bool _isAttacking = false;
 
   final math.Random _random = math.Random();
@@ -13,6 +14,8 @@ class EnemyComponent extends SimpleEnemy with BlockMovementCollision {
     required super.position,
     required SpriteAnimation idleRightAnimation,
     required SpriteAnimation runRightAnimation,
+    this.shardAnimation,
+    this.onShardCollected,
   }) : super(
           size: Vector2(32, 32),
           life: 2.0,
