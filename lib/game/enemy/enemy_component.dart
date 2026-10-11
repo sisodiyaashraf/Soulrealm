@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'package:bonfire/bonfire.dart';
+import 'package:flutter/material.dart';
 import '../world/items/soul_shard_component.dart';
 
 class EnemyComponent extends SimpleEnemy with BlockMovementCollision {
@@ -95,5 +98,19 @@ class EnemyComponent extends SimpleEnemy with BlockMovementCollision {
         });
       },
     );
+  }
+
+  @override
+  void onDie() {
+    super.onDie();
+    if (shardAnimation != null && onShardCollected != null) {
+      gameRef.add(
+        SoulShardComponent(
+          position: position.clone(),
+          animation: shardAnimation!,
+          onCollected: onShardCollected!,
+        ),
+      );
+    }
   }
 }

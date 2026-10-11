@@ -201,3 +201,147 @@ class PortalComponent extends GameComponent with Sensor {
     }
   }
 }
+
+/// A glowing restorative fountain in the overworld that replenishes player health.
+class SanctuaryFountain extends GameComponent with Sensor {
+  final VoidCallback onHeal;
+  double _healCooldown = 0.0;
+  double _time = 0.0;
+
+  SanctuaryFountain({
+    required Vector2 initialPosition,
+    required this.onHeal,
+  }) {
+    position = initialPosition;
+    size = Vector2(64, 64);
+  }
+
+  @override
+  Future<void> onLoad() async {
+    add(
+      RectangleHitbox(
+        size: Vector2(32, 24),
+        position: Vector2(16, 20),
+      ),
+    );
+    await super.onLoad();
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _time += dt;
+    if (_healCooldown > 0) {
+      _healCooldown -= dt;
+    }
+  }
+
+  @override
+  void onContact(GameComponent component) {
+    if (component is Player && _healCooldown <= 0) {
+      _healCooldown = 3.0;
+      onHeal();
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final cx = size.x / 2;
+    final cy = size.y / 2;
+
+    // Glowing holy/arcane spring pool
+    final poolPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF00E5FF).withValues(alpha: 0.8),
+          const Color(0xFF00796B).withValues(alpha: 0.4),
+          const Color(0x00000000),
+        ],
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: 20));
+    canvas.drawOval(Rect.fromLTRB(cx - 20, cy - 10, cx + 20, cy + 10), poolPaint);
+
+    // Floating water ripple
+    final ripple = (math.sin(_time * 4.0) + 1.0) * 0.5;
+    final ripplePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.6 * (1.0 - ripple))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawOval(Rect.fromLTRB(cx - 16 * ripple, cy - 8 * ripple, cx + 16 * ripple, cy + 8 * ripple), ripplePaint);
+  }
+}
+
+/// An ancient monolith with arcane engravings that reveals dark fantasy lore.
+class LoreObelisk extends GameComponent with Sensor {
+  final VoidCallback onRead;
+  double _triggerCooldown = 0.0;
+  double _time = 0.0;
+
+  LoreObelisk({
+    required Vector2 initialPosition,
+    required this.onRead,
+  }) {
+    position = initialPosition;
+    size = Vector2(64, 64);
+  }
+
+  @override
+  Future<void> onLoad() async {
+    add(
+      RectangleHitbox(
+        size: Vector2(28, 20),
+        position: Vector2(18, 24),
+      ),
+    );
+    await super.onLoad();
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _time += dt;
+    if (_triggerCooldown > 0) {
+      _triggerCooldown -= dt;
+    }
+  }
+
+  @override
+  void onContact(GameComponent component) {
+    if (component is Player && _triggerCooldown <= 0) {
+      _triggerCooldown = 5.0;
+      onRead();
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final cx = size.x / 2;
+    final cy = size.y / 2;
+
+    // Obelisk stone pillar
+    final stonePath = Path()
+      ..moveTo(cx, cy - 20)
+      ..lineTo(cx + 8, cy - 14)
+      ..lineTo(cx + 6, cy + 16)
+      ..lineTo(cx - 6, cy + 16)
+      ..lineTo(cx - 8, cy - 14)
+      ..close();
+
+    final stonePaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [const Color(0xFF37474F), const Color(0xFF102027)],
+      ).createShader(Rect.fromLTWH(cx - 8, cy - 20, 16, 36));
+    canvas.drawPath(stonePath, stonePaint);
+
+    // Glowing ancient rune
+    final pulse = (math.sin(_time * 3.0) + 1.0) * 0.5;
+    final runePaint = Paint()
+      ..color = const Color(0xFFFF4081).withValues(alpha: 0.4 + 0.5 * pulse)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawLine(Offset(cx, cy - 10), Offset(cx, cy + 8), runePaint);
+    canvas.drawCircle(Offset(cx, cy - 4), 3, runePaint);
+  }
+}
+
