@@ -82,7 +82,9 @@ class VoidWardenBoss extends SimpleEnemy with BlockMovementCollision {
     // Normal AI positioning
     final dist = (player.position - position).length;
     if (dist > 140.0) {
-      followComponent(player, dt);
+      final diff = player.position - position;
+      final angle = math.atan2(diff.y, diff.x);
+      moveFromAngle(angle);
     } else {
       idle();
       if (player.position.x < position.x) {

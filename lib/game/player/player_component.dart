@@ -94,12 +94,10 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
     }
 
     // Proximity check for Pyres: automatically rekindle if standing right next to unlit pyre
-    if (gameRef.components.isNotEmpty) {
-      for (final comp in gameRef.components.whereType<PyreComponent>()) {
-        if (!comp.isLit && (comp.position - position).length < 32.0) {
-          comp.lightUp();
-          HapticFeedback.lightImpact();
-        }
+    for (final comp in gameRef.query<PyreComponent>()) {
+      if (!comp.isLit && (comp.position - position).length < 32.0) {
+        comp.lightUp();
+        HapticFeedback.lightImpact();
       }
     }
   }
@@ -136,11 +134,9 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
     );
 
     // Also rekindle any pyre in melee range
-    if (gameRef.components.isNotEmpty) {
-      for (final comp in gameRef.components.whereType<PyreComponent>()) {
-        if (!comp.isLit && (comp.position - position).length < 48.0) {
-          comp.lightUp();
-        }
+    for (final comp in gameRef.query<PyreComponent>()) {
+      if (!comp.isLit && (comp.position - position).length < 48.0) {
+        comp.lightUp();
       }
     }
   }

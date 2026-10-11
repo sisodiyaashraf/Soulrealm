@@ -1,5 +1,6 @@
 import 'package:bonfire/bonfire.dart';
 import 'package:bonfire/map/base/layer.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:xml/xml.dart';
 import 'tiles/tiles.dart';
@@ -14,6 +15,8 @@ class MapLoader {
     required Sprite pyreUnlitSprite,
     bool isPortalActive = true,
     required List<int> unlockedLevels,
+    VoidCallback? onHealFountain,
+    VoidCallback? onReadLore,
   }) async {
     final tmxString = await rootBundle.loadString(tmxAssetPath);
     final document = XmlDocument.parse(tmxString);
@@ -29,6 +32,7 @@ class MapLoader {
     final List<Tile> tiles = [];
     final List<GameComponent> dynamicComponents = [];
     final List<Vector2> enemySpawnPoints = [];
+    final List<Vector2> shardSpawnPoints = [];
     Vector2 playerSpawnPoint = Vector2(64, 64); // fallback spawn
 
     // Map origin offset to center it visually
@@ -37,6 +41,7 @@ class MapLoader {
 
     int pyreCount = 0;
     int portalCount = 0;
+    final isOverworld = tmxAssetPath.contains('overworld');
 
     for (int row = 0; row < height; row++) {
       for (int col = 0; col < width; col++) {
@@ -45,16 +50,14 @@ class MapLoader {
         final tileId = tileIds[index];
 
         // Screen coordinate (isometric projection)
-        // Diamond width=64, height=32. Center spacing: X step is 32, Y step is 16.
         final double screenX = originX + (col - row) * 32.0;
         final double screenY = originY + (col + row) * 16.0;
         
-        // Draw floor underneath everything (except wall outer border tile blocks maybe, but floor underneath is safer)
         if (tileId != 0) {
           tiles.add(
             Tile(
               x: screenX,
-              y: screenY - 16, // Offset to center 64x64 sprite floor line on the grid coordinate
+              y: screenY - 16,
               width: 64,
               height: 64,
               sprite: TileSprite(
@@ -67,13 +70,17 @@ class MapLoader {
         }
 
         if (tileId == 1) {
-          // Floor only, already added floor above
           // Set player spawn point to the first open floor tile in the middle-ish
           if (row == height ~/ 2 && col == width ~/ 2) {
             playerSpawnPoint = Vector2(screenX + 16, screenY);
+          } else if (!isOverworld) {
+            // Spawn soul shards on floor tiles
+            if ((row * 3 + col) % 6 == 0) {
+              shardSpawnPoints.add(Vector2(screenX + 20, screenY));
+            }
           }
         } else if (tileId == 2) {
-          // Wall (index 2 in TMX corresponds to Column 1, Row 0 in tileset = x:64, y:0)
+          // Wall
           tiles.add(
             Tile(
               x: screenX,
@@ -108,7 +115,7 @@ class MapLoader {
           // Portal location
           portalCount++;
           final targetLevelId = portalCount;
-          final isThisPortalActive = tmxAssetPath.contains('overworld')
+          final isThisPortalActive = isOverworld
               ? unlockedLevels.contains(targetLevelId)
               : isPortalActive;
 
@@ -122,13 +129,28 @@ class MapLoader {
         }
 
         // Spawn shadow enemies at random floor tiles that are not near spawn point
-        if (tileId == 1 && (row != height ~/ 2 && col != width ~/ 2)) {
-          // Add enemy spawns for 15% of floor tiles in level maps
+        if (tileId == 1 && (row != height ~/ 2 && col != width ~/ 2) && !isOverworld) {
           if ((row + col) % 7 == 0) {
             enemySpawnPoints.add(Vector2(screenX + 16, screenY));
           }
         }
       }
+    }
+
+    // Add sanctuary fountain and lore obelisk to overworld
+    if (isOverworld) {
+      dynamicComponents.add(
+        SanctuaryFountain(
+          initialPosition: Vector2(originX - 60, originY + 120),
+          onHeal: onHealFountain ?? () {},
+        ),
+      );
+      dynamicComponents.add(
+        LoreObelisk(
+          initialPosition: Vector2(originX + 80, originY + 100),
+          onRead: onReadLore ?? () {},
+        ),
+      );
     }
 
     return MapLoadResult(
@@ -138,6 +160,7 @@ class MapLoader {
       components: dynamicComponents,
       playerSpawn: playerSpawnPoint,
       enemySpawns: enemySpawnPoints,
+      shardSpawns: shardSpawnPoints,
     );
   }
 }
@@ -147,11 +170,13 @@ class MapLoadResult {
   final List<GameComponent> components;
   final Vector2 playerSpawn;
   final List<Vector2> enemySpawns;
+  final List<Vector2> shardSpawns;
 
   MapLoadResult({
     required this.map,
     required this.components,
     required this.playerSpawn,
     required this.enemySpawns,
+    required this.shardSpawns,
   });
 }

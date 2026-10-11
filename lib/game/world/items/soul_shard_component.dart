@@ -11,6 +11,8 @@ class SoulShardComponent extends GameComponent {
   bool _collected = false;
   double _currentSpeed = 60.0;
 
+  late final SpriteAnimationTicker _ticker;
+
   SoulShardComponent({
     required Vector2 position,
     required this.animation,
@@ -22,8 +24,15 @@ class SoulShardComponent extends GameComponent {
   }
 
   @override
+  Future<void> onLoad() async {
+    _ticker = animation.createTicker();
+    await super.onLoad();
+  }
+
+  @override
   void update(double dt) {
     super.update(dt);
+    _ticker.update(dt);
     if (_collected) return;
     _time += dt;
 
@@ -59,7 +68,7 @@ class SoulShardComponent extends GameComponent {
     
     canvas.save();
     canvas.translate(0, bob);
-    animation.getSprite().render(
+    _ticker.getSprite().render(
       canvas,
       position: Vector2.zero(),
       size: size,
