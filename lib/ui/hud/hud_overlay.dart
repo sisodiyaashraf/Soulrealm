@@ -337,13 +337,17 @@ class HudOverlay extends StatelessWidget {
                                   color: isSoulSurge ? const Color(0xFFFFEA00) : const Color(0xFFFF2A85),
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  isSoulSurge ? 'SOUL SURGE ACTIVE! (x$comboCount)' : 'x$comboCount STREAK',
-                                  style: TextStyle(
-                                    color: isSoulSurge ? const Color(0xFFFFEA00) : Colors.white,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.0,
+                                Flexible(
+                                  child: Text(
+                                    isSoulSurge ? 'SOUL SURGE ACTIVE! (x$comboCount)' : 'x$comboCount STREAK',
+                                    style: TextStyle(
+                                      color: isSoulSurge ? const Color(0xFFFFEA00) : Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.8,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],

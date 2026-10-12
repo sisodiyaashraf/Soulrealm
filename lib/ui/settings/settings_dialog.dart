@@ -62,10 +62,12 @@ class _SettingsDialogState extends State<SettingsDialog> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () async {
+              final rootNav = Navigator.of(context);
+              final dialogNav = Navigator.of(ctx);
               await _saveService.resetProgress();
               if (mounted) {
-                Navigator.pop(ctx);
-                Navigator.pop(context);
+                dialogNav.pop();
+                rootNav.pop();
                 widget.onDataChanged();
               }
             },
