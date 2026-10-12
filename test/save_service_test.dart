@@ -31,10 +31,34 @@ void main() {
     expect(save.getUpgradeLevel('health'), 1);
     expect(save.getMaxHealth(), 4.0);
 
-    // Stars
+    // Mana upgrade (costs 15)
+    expect(save.getMaxMana(), 100.0);
+    expect(save.getManaRegenRate(), 12.0);
+    final boughtMana = await save.purchaseUpgrade('mana');
+    expect(boughtMana, true);
+    expect(save.getSoulShards(), 20);
+    expect(save.getUpgradeLevel('mana'), 1);
+    expect(save.getMaxMana(), 125.0);
+    expect(save.getManaRegenRate(), 15.0);
+
+    // Stars & Titles
     expect(save.getLevelStars(1), 0);
     await save.saveLevelStars(1, 3);
     expect(save.getLevelStars(1), 3);
     expect(save.getTotalStars(), 3);
+    expect(save.getPlayerTitle(), 'EMBER INITIATE');
+
+    // Settings
+    expect(save.getScreenShake(), true);
+    await save.setScreenShake(false);
+    expect(save.getScreenShake(), false);
+
+    // Lifetime stats
+    expect(save.getTotalEnemiesSlain(), 0);
+    await save.incrementEnemiesSlain(5);
+    expect(save.getTotalEnemiesSlain(), 5);
+
+    await save.recordCombo(8);
+    expect(save.getHighestCombo(), 8);
   });
 }
