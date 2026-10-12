@@ -6,7 +6,7 @@ class FloatingDamageText extends GameComponent {
   final Color color;
   final bool isCritical;
 
-  double _duration = 0.85;
+  final double _duration = 0.85;
   double _elapsed = 0.0;
   final Vector2 _velocity;
 

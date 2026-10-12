@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../services/save_service.dart';
+import '../ui/floating_damage_text.dart';
 import '../world/tiles/tiles.dart';
 
 class PlayerComponent extends SimplePlayer with BlockMovementCollision {
@@ -11,12 +13,14 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
   final VoidCallback onDeath;
   final Function(double currentMana, double maxMana) onManaChanged;
   final Function(double cooldownFraction) onDashCooldown;
+  final void Function(int combo, bool isSurge)? onComboChanged;
   final SpriteAnimation slashAnimation;
   final SpriteAnimation soulBoltAnimation;
 
   final double attackDamage;
   final double dashCooldown;
-  final double maxMana = 100.0;
+  final double maxMana;
+  final double manaRegenRate;
 
   double _mana = 100.0;
   double _dashTimer = 0.0;
@@ -24,6 +28,13 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
   double _dashDuration = 0.0;
   Vector2 _dashVelocity = Vector2.zero();
   double _invulnTimer = 0.0;
+
+  // Combo system
+  int _comboCount = 0;
+  double _comboTimer = 0.0;
+  bool _isSurge = false;
+
+  final SaveService _saveService = SaveService();
 
   PlayerComponent({
     required super.position,
@@ -35,10 +46,13 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
     required this.onDeath,
     required this.onManaChanged,
     required this.onDashCooldown,
+    this.onComboChanged,
     double maxHealth = baseMaxHealth,
     double moveSpeed = 120.0,
     this.attackDamage = 1.0,
     this.dashCooldown = 1.4,
+    this.maxMana = 100.0,
+    this.manaRegenRate = 12.0,
   }) : super(
           size: Vector2(32, 32),
           life: maxHealth,
@@ -47,7 +61,12 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
             idleRight: idleRightAnimation,
             runRight: runRightAnimation,
           ),
-        );
+        ) {
+    _mana = maxMana;
+  }
+
+  int get comboCount => _comboCount;
+  bool get isSurge => _isSurge;
 
   @override
   Future<void> onLoad() async {
@@ -61,6 +80,7 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
     onHealthChanged(life);
     onManaChanged(_mana, maxMana);
     onDashCooldown(0.0);
+    onComboChanged?.call(0, false);
   }
 
   @override
@@ -87,19 +107,82 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
       onDashCooldown(math.max(0.0, _dashTimer / dashCooldown));
     }
 
-    // Mana regeneration (+12 per sec)
+    // Mana regeneration
     if (_mana < maxMana) {
-      _mana = math.min(maxMana, _mana + (12.0 * dt));
+      _mana = math.min(maxMana, _mana + (manaRegenRate * dt));
       onManaChanged(_mana, maxMana);
+    }
+
+    // Combo timer decay
+    if (_comboTimer > 0) {
+      _comboTimer -= dt;
+      if (_comboTimer <= 0) {
+        _comboCount = 0;
+        _isSurge = false;
+        onComboChanged?.call(0, false);
+      }
     }
 
     // Proximity check for Pyres: automatically rekindle if standing right next to unlit pyre
     for (final comp in gameRef.query<PyreComponent>()) {
       if (!comp.isLit && (comp.position - position).length < 32.0) {
         comp.lightUp();
-        HapticFeedback.lightImpact();
+        if (_saveService.getHaptics()) {
+          HapticFeedback.lightImpact();
+        }
       }
     }
+  }
+
+  /// Register an enemy hit to build combo and activate Soul Surge
+  void registerHit(double damageDealt, Vector2 hitPosition) {
+    _comboCount++;
+    _comboTimer = 3.2; // 3.2 seconds window to chain combos
+    _isSurge = _comboCount >= 5;
+
+    _saveService.recordCombo(_comboCount);
+    onComboChanged?.call(_comboCount, _isSurge);
+
+    if (_saveService.getFloatingDamage()) {
+      final isCrit = _isSurge || damageDealt >= 2.0;
+      final text = isCrit ? 'CRIT -${damageDealt.toStringAsFixed(1)}' : '-${damageDealt.toStringAsFixed(1)}';
+      final color = isCrit ? const Color(0xFFFFD700) : const Color(0xFF00E5FF);
+
+      gameRef.add(
+        FloatingDamageText(
+          position: hitPosition - Vector2(10, 16),
+          text: text,
+          color: color,
+          isCritical: isCrit,
+        ),
+      );
+    }
+  }
+
+  /// Use an Aether Flask to restore 1 Life Heart and 50 Soul Mana
+  bool useFlask() {
+    if (life >= maxLife && _mana >= maxMana) return false;
+
+    addLife(1.0);
+    _mana = math.min(maxMana, _mana + 50.0);
+    onHealthChanged(life);
+    onManaChanged(_mana, maxMana);
+
+    if (_saveService.getHaptics()) {
+      HapticFeedback.mediumImpact();
+    }
+
+    if (_saveService.getFloatingDamage()) {
+      gameRef.add(
+        FloatingDamageText(
+          position: position - Vector2(10, 20),
+          text: '+1 LIFE',
+          color: const Color(0xFF00E676),
+          isCritical: true,
+        ),
+      );
+    }
+    return true;
   }
 
   @override
@@ -124,9 +207,14 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
 
   // Perform melee attack
   void executeMeleeAttack() {
-    HapticFeedback.lightImpact();
+    if (_saveService.getHaptics()) {
+      HapticFeedback.lightImpact();
+    }
+
+    final effectiveDamage = _isSurge ? attackDamage * 1.35 : attackDamage;
+
     simpleAttackMelee(
-      damage: attackDamage,
+      damage: effectiveDamage,
       size: Vector2(28, 28),
       withPush: true,
       animationRight: Future.value(slashAnimation),
@@ -147,25 +235,32 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
     _dashTimer = dashCooldown;
     _isDashing = true;
     _dashDuration = 0.22;
-    HapticFeedback.mediumImpact();
+    if (_saveService.getHaptics()) {
+      HapticFeedback.mediumImpact();
+    }
 
     final angle = _directionToAngle(lastDirection);
-    _dashVelocity = Vector2(math.cos(angle), math.sin(angle)) * (speed * 2.6);
+    final boost = _isSurge ? 3.0 : 2.6;
+    _dashVelocity = Vector2(math.cos(angle), math.sin(angle)) * (speed * boost);
   }
 
   // Perform Soul Bolt (ranged homing/directional spell)
   void executeSoulBolt() {
     if (_mana < 25.0) {
-      HapticFeedback.selectionClick();
+      if (_saveService.getHaptics()) {
+        HapticFeedback.selectionClick();
+      }
       return;
     }
     _mana -= 25.0;
     onManaChanged(_mana, maxMana);
-    HapticFeedback.lightImpact();
+    if (_saveService.getHaptics()) {
+      HapticFeedback.lightImpact();
+    }
 
-    // Auto-aim towards nearest active enemy within 200px if present
+    // Auto-aim towards nearest active enemy within 220px if present
     double targetAngle = _directionToAngle(lastDirection);
-    double minDistance = 200.0;
+    double minDistance = 220.0;
 
     for (final enemy in gameRef.enemies()) {
       if (!enemy.isDead) {
@@ -178,13 +273,15 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
       }
     }
 
+    final effectiveDamage = _isSurge ? (attackDamage * 1.5 * 1.35) : (attackDamage * 1.5);
+
     simpleAttackRangeByAngle(
       animation: Future.value(soulBoltAnimation),
       size: Vector2(24, 24),
       angle: targetAngle,
-      damage: attackDamage * 1.5,
+      damage: effectiveDamage,
       attackFrom: AttackOriginEnum.PLAYER_OR_ALLY,
-      speed: 240.0,
+      speed: 250.0,
       marginFromOrigin: 8.0,
     );
   }
@@ -214,8 +311,30 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
   void onReceiveDamage(AttackOriginEnum attacker, double damage, dynamic identify) {
     if (_isDashing || _invulnTimer > 0) return;
     _invulnTimer = 0.8;
-    gameRef.camera.shake(intensity: 4, duration: const Duration(milliseconds: 200));
-    HapticFeedback.mediumImpact();
+
+    // Reset combo on hit
+    _comboCount = 0;
+    _isSurge = false;
+    onComboChanged?.call(0, false);
+
+    if (_saveService.getScreenShake()) {
+      gameRef.camera.shake(intensity: 4, duration: const Duration(milliseconds: 200));
+    }
+    if (_saveService.getHaptics()) {
+      HapticFeedback.mediumImpact();
+    }
+
+    if (_saveService.getFloatingDamage()) {
+      gameRef.add(
+        FloatingDamageText(
+          position: position - Vector2(10, 20),
+          text: '-${damage.toStringAsFixed(1)}',
+          color: const Color(0xFFFF5252),
+          isCritical: true,
+        ),
+      );
+    }
+
     super.onReceiveDamage(attacker, damage, identify);
     onHealthChanged(life);
   }
@@ -241,7 +360,14 @@ class PlayerComponent extends SimplePlayer with BlockMovementCollision {
       canvas.drawCircle(Offset(size.x / 2, size.y / 2), 16, trailPaint);
     }
 
+    // Soul Surge radiant glowing aura
+    if (_isSurge) {
+      final surgePaint = Paint()
+        ..color = const Color(0xFF00E5FF).withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+      canvas.drawCircle(Offset(size.x / 2, size.y / 2), 20, surgePaint);
+    }
+
     super.render(canvas);
   }
 }
-

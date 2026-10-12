@@ -256,7 +256,7 @@ class _BestiaryDialogState extends State<BestiaryDialog> {
                     width: 170,
                     child: ListView.separated(
                       itemCount: activeList.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
                       itemBuilder: (context, idx) {
                         final item = activeList[idx];
                         final isSelected = idx == _selectedEntryIndex;

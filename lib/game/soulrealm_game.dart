@@ -47,6 +47,11 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   bool _gameOver = false;
   int _starsEarned = 1;
 
+  // Combo & Consumable Potion state
+  int _comboCount = 0;
+  bool _isSoulSurge = false;
+  int _flaskCharges = 2;
+
   double? _bossHp;
   double? _bossMaxHp;
   double? _compassAngle;
@@ -101,9 +106,13 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   Future<void> _initGameData() async {
     await _saveService.init();
     await _gamesServices.initialize();
+    await _saveService.incrementRuns();
 
     _maxHp = _saveService.getMaxHealth();
     _playerHp = _maxHp;
+    _maxMana = _saveService.getMaxMana();
+    _playerMana = _maxMana;
+    _flaskCharges = 2;
 
     // Generate procedural assets
     final tilesetImg = await TilesetGenerator.generate();
@@ -217,15 +226,32 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   void _onHealFountain() {
     setState(() {
       _playerHp = _maxHp;
+      _playerMana = _maxMana;
+      _flaskCharges = 2;
     });
-    HapticFeedback.mediumImpact();
+    if (_saveService.getHaptics()) {
+      HapticFeedback.mediumImpact();
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Aether Spring has fully restored your soul vessel!'),
+        content: Text('Aether Spring has fully restored your soul vessel & flasks!'),
         duration: Duration(seconds: 2),
         backgroundColor: Color(0xFF00E5FF),
       ),
     );
+  }
+
+  void _useFlask() {
+    if (_flaskCharges <= 0) return;
+    final player = _bonfireGame?.player;
+    if (player is PlayerComponent) {
+      final success = player.useFlask();
+      if (success) {
+        setState(() {
+          _flaskCharges--;
+        });
+      }
+    }
   }
 
   void _showLoreDialog() {
@@ -268,6 +294,7 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   }
 
   void _onPyreLit(int id) {
+    _saveService.incrementPyresLit(1);
     setState(() {
       _litPyres++;
       if (_litPyres >= _totalPyres) {
@@ -276,7 +303,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
         }
       }
     });
-    HapticFeedback.lightImpact();
+    if (_saveService.getHaptics()) {
+      HapticFeedback.lightImpact();
+    }
   }
 
   void _onPortalTrigger(int targetLevelId) {
@@ -405,6 +434,10 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
   void _onPlayerDeath() {
     _stopwatch.stop();
+    final shardsSaved = (_shardsCollectedThisRun / 2).ceil();
+    if (shardsSaved > 0) {
+      _saveService.addSoulShards(shardsSaved);
+    }
     setState(() {
       _gameOver = true;
     });
@@ -539,8 +572,16 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
               moveSpeed: playerSpeed,
               attackDamage: playerDamage,
               dashCooldown: dashCooldown,
+              maxMana: _maxMana,
+              manaRegenRate: _saveService.getManaRegenRate(),
               onHealthChanged: _onPlayerHealthChanged,
               onDeath: _onPlayerDeath,
+              onComboChanged: (combo, isSurge) {
+                setState(() {
+                  _comboCount = combo;
+                  _isSoulSurge = isSurge;
+                });
+              },
               onManaChanged: (mana, maxMana) {
                 setState(() {
                   _playerMana = mana;
@@ -598,6 +639,10 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                   bossMaxHp: _bossMaxHp,
                   compassAngle: _compassAngle,
                   compassTargetName: _compassTargetName,
+                  comboCount: _comboCount,
+                  isSoulSurge: _isSoulSurge,
+                  flaskCharges: _flaskCharges,
+                  onUseFlask: _useFlask,
                   onPause: () {
                     game.pauseEngine();
                     showDialog(
@@ -630,65 +675,234 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   }
 
   Widget _buildPauseDialog(BonfireGameInterface game) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF0F121F),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('PAUSED', style: TextStyle(color: Colors.white, letterSpacing: 2, fontWeight: FontWeight.bold)),
-      content: const Text('Do you wish to resume or return to progression map?', style: TextStyle(color: Colors.white70)),
-      actions: [
-        TextButton(
-          onPressed: () {
-            game.resumeEngine();
-            Navigator.pop(context);
-          },
-          child: const Text('RESUME', style: TextStyle(color: Color(0xFF00E5FF))),
-        ),
-        TextButton(
-          onPressed: () {
-            if (widget.isOverworld) {
-              final player = game.player;
-              if (player != null) {
-                _saveService.saveOverworldPosition(player.position.x, player.position.y);
-              }
-            }
-            Navigator.pop(context);
-            Navigator.pop(context);
-          },
-          child: const Text('QUIT', style: TextStyle(color: Colors.redAccent)),
-        ),
-      ],
+    bool shake = _saveService.getScreenShake();
+    bool haptics = _saveService.getHaptics();
+    bool dmgNums = _saveService.getFloatingDamage();
+
+    return StatefulBuilder(
+      builder: (context, setDialogState) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0C0E1A),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.6), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
+                  blurRadius: 28,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.pause_circle_filled, color: Color(0xFF00E5FF), size: 24),
+                        SizedBox(width: 10),
+                        Text(
+                          'EXPEDITION PAUSED',
+                          style: TextStyle(
+                            color: Colors.white,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white60, size: 20),
+                      onPressed: () {
+                        game.resumeEngine();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Divider(color: Colors.white10),
+                const SizedBox(height: 10),
+
+                // In-Game Setting Quick Toggles
+                _buildPauseToggle(
+                  label: 'Screen Shake Tremor',
+                  icon: Icons.vibration,
+                  value: shake,
+                  onChanged: (val) async {
+                    await _saveService.setScreenShake(val);
+                    setDialogState(() => shake = val);
+                  },
+                ),
+                _buildPauseToggle(
+                  label: 'Haptic Strike Feedback',
+                  icon: Icons.touch_app,
+                  value: haptics,
+                  onChanged: (val) async {
+                    await _saveService.setHaptics(val);
+                    setDialogState(() => haptics = val);
+                  },
+                ),
+                _buildPauseToggle(
+                  label: 'Floating Combat Text',
+                  icon: Icons.numbers,
+                  value: dmgNums,
+                  onChanged: (val) async {
+                    await _saveService.setFloatingDamage(val);
+                    setDialogState(() => dmgNums = val);
+                  },
+                ),
+
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          if (widget.isOverworld) {
+                            final player = game.player;
+                            if (player != null) {
+                              _saveService.saveOverworldPosition(player.position.x, player.position.y);
+                            }
+                          }
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: const Text('ABANDON', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00E5FF),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          game.resumeEngine();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('RESUME RUN', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPauseToggle({
+    required String label,
+    required IconData icon,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: const Color(0xFF00E5FF)),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            ],
+          ),
+          Switch(
+            value: value,
+            activeThumbColor: const Color(0xFF00E5FF),
+            activeTrackColor: const Color(0xFF00E5FF).withValues(alpha: 0.3),
+            inactiveTrackColor: Colors.white12,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildLevelCompleteOverlay() {
+    final rank = _starsEarned == 3 ? 'S' : (_starsEarned == 2 ? 'A' : 'B');
+    final rankColor = _starsEarned == 3
+        ? const Color(0xFFFFD700)
+        : (_starsEarned == 2 ? const Color(0xFF00E5FF) : const Color(0xFF7C4DFF));
+
     return Container(
-      color: Colors.black.withValues(alpha: 0.75),
+      color: Colors.black.withValues(alpha: 0.8),
       child: Center(
         child: Container(
-          width: 320,
-          padding: const EdgeInsets.all(24),
+          width: 360,
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F121F),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF00E5FF), width: 2),
+            color: const Color(0xFF0C0E1A),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF00E5FF), width: 1.8),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
-                blurRadius: 25,
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
+                blurRadius: 30,
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'STAGE CLEARED',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 3,
-                ),
+              // Rank Badge & Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: rankColor.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: rankColor, width: 2),
+                    ),
+                    child: Center(
+                      child: Text(
+                        rank,
+                        style: TextStyle(
+                          color: rankColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'STAGE PURIFIED',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.5,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
 
@@ -702,38 +916,61 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                     child: Icon(
                       active ? Icons.star : Icons.star_border,
                       color: active ? const Color(0xFFFFD700) : Colors.white24,
-                      size: 36,
+                      size: 34,
                     ),
                   );
                 }),
               ),
               const SizedBox(height: 16),
 
-              Text(
-                'Time Taken: ${_stopwatch.elapsed.inSeconds} seconds',
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              // Run Recap Card
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF13172E),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('EXPEDITION TIME', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                        Text('${_stopwatch.elapsed.inSeconds}s', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('SHARDS HARVESTED', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                        Text('+$_shardsCollectedThisRun', style: const TextStyle(color: Color(0xFF00E5FF), fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
+                    if (_totalPyres > 0) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('PYRES REKINDLED', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                          Text('$_litPyres / $_totalPyres', style: const TextStyle(color: Color(0xFFFF9100), fontWeight: FontWeight.bold, fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.diamond_outlined, color: Color(0xFF00E5FF), size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Shards Gathered: +$_shardsCollectedThisRun',
-                    style: const TextStyle(color: Color(0xFF00E5FF), fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+
+              const SizedBox(height: 20),
 
               if (widget.levelId < 5) ...[
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00E5FF),
                     foregroundColor: Colors.black,
-                    minimumSize: const Size.fromHeight(44),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    minimumSize: const Size.fromHeight(42),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
                     Navigator.pushReplacement(
@@ -755,8 +992,8 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white24),
-                  minimumSize: const Size.fromHeight(44),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  minimumSize: const Size.fromHeight(42),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () {
                   Navigator.pop(context);
@@ -771,36 +1008,75 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   }
 
   Widget _buildGameOverOverlay() {
+    final shardsRetained = (_shardsCollectedThisRun / 2).ceil();
+
     return Container(
-      color: Colors.black.withValues(alpha: 0.8),
+      color: Colors.black.withValues(alpha: 0.85),
       child: Center(
         child: Container(
-          width: 300,
-          padding: const EdgeInsets.all(24),
+          width: 320,
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F121F),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.redAccent, width: 2),
+            color: const Color(0xFF0C0E1A),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.redAccent, width: 1.8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.redAccent.withValues(alpha: 0.35),
+                blurRadius: 25,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Icon(Icons.broken_image_outlined, color: Colors.redAccent, size: 36),
+              const SizedBox(height: 8),
               const Text(
                 'SOUL EXTINGUISHED',
                 style: TextStyle(
                   color: Colors.redAccent,
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 4),
+              const Text(
+                'Your mortal vessel collapsed into the abyss',
+                style: TextStyle(color: Colors.white54, fontSize: 11),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 14),
+
+              if (shardsRetained > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF13172E),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.diamond_outlined, color: Color(0xFF00E5FF), size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Retained +$shardsRetained Shards in Vessel',
+                        style: const TextStyle(color: Color(0xFF00E5FF), fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(42),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -813,14 +1089,14 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                     ),
                   );
                 },
-                child: const Text('RETRY STAGE', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('RETRY STAGE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
               ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('QUIT TO MAP', style: TextStyle(color: Colors.white54)),
+                child: const Text('QUIT TO MAP', style: TextStyle(color: Colors.white54, letterSpacing: 1.0)),
               ),
             ],
           ),

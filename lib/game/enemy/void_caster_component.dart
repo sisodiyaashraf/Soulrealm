@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import '../world/items/soul_shard_component.dart';
+import '../player/player_component.dart';
+import '../../services/save_service.dart';
 
 class VoidCasterComponent extends SimpleEnemy with BlockMovementCollision {
   final SpriteAnimation voidOrbAnimation;
@@ -112,8 +114,20 @@ class VoidCasterComponent extends SimpleEnemy with BlockMovementCollision {
   }
 
   @override
+  void onReceiveDamage(AttackOriginEnum attacker, double damage, dynamic identify) {
+    super.onReceiveDamage(attacker, damage, identify);
+    if (attacker == AttackOriginEnum.PLAYER_OR_ALLY) {
+      final player = gameRef.player;
+      if (player is PlayerComponent) {
+        player.registerHit(damage, position);
+      }
+    }
+  }
+
+  @override
   void onDie() {
     super.onDie();
+    SaveService().incrementEnemiesSlain(1);
     // Drop 2 Soul Shards
     gameRef.add(
       SoulShardComponent(
