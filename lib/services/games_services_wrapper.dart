@@ -25,6 +25,7 @@ class GamesServicesWrapper {
         const Duration(seconds: 5),
         onTimeout: () {
           developer.log("GamesServices: Sign-in timed out.");
+          return;
         },
       );
       _isConnected = true;
