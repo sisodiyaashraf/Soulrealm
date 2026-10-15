@@ -292,27 +292,31 @@ class _LevelMapScreenState extends State<LevelMapScreen> with SingleTickerProvid
                   child: const Icon(Icons.shield_outlined, color: Color(0xFF00E5FF), size: 16),
                 ),
                 const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      playerTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        playerTitle,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                    const Text(
-                      'VESSEL OF THE SOULREALM',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 8.5,
-                        letterSpacing: 1.0,
+                      const Text(
+                        'VESSEL OF THE SOULREALM',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 8.5,
+                          letterSpacing: 1.0,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -529,7 +533,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> with SingleTickerProvid
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,7 +677,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> with SingleTickerProvid
                 ],
               ),
 
-              const Spacer(),
+              const SizedBox(height: 16),
 
               // Bottom card action row: Best Time + Embark Button
               Row(
@@ -736,9 +740,12 @@ class _LevelMapScreenState extends State<LevelMapScreen> with SingleTickerProvid
                         children: [
                           const Icon(Icons.lock_outline, color: Colors.white38, size: 16),
                           const SizedBox(width: 6),
-                          Text(
-                            'LOCKED (CLEAR STAGE ${id - 1})',
-                            style: const TextStyle(color: Colors.white38, fontWeight: FontWeight.bold, fontSize: 10),
+                          Flexible(
+                            child: Text(
+                              'LOCKED (CLEAR STAGE ${id - 1})',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white38, fontWeight: FontWeight.bold, fontSize: 10),
+                            ),
                           ),
                         ],
                       ),
