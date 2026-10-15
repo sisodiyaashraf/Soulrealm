@@ -131,63 +131,130 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
     Flame.images.add('enemy.png', enemyImg);
 
     // Prepare Sprites / Animations
-    _unlitPyreSprite = Sprite(tilesetImg, srcPosition: Vector2(0, 64), srcSize: Vector2(64, 64));
+    _unlitPyreSprite = Sprite(
+      tilesetImg,
+      srcPosition: Vector2(0, 64),
+      srcSize: Vector2(64, 64),
+    );
 
     _playerIdle = SpriteAnimation.fromFrameData(
       playerImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.2, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.2,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _playerWalk = SpriteAnimation.fromFrameData(
       playerImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.15, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 32)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.15,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 32),
+      ),
     );
 
     _enemyIdle = SpriteAnimation.fromFrameData(
       enemyImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.2, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.2,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _enemyWalk = SpriteAnimation.fromFrameData(
       enemyImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.15, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 32)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.15,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 32),
+      ),
     );
 
     _casterIdle = SpriteAnimation.fromFrameData(
       casterImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.2, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.2,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _casterWalk = SpriteAnimation.fromFrameData(
       casterImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.15, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 32)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.15,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 32),
+      ),
     );
 
     _bossIdle = SpriteAnimation.fromFrameData(
       bossImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.2, textureSize: Vector2(48, 48), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.2,
+        textureSize: Vector2(48, 48),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _bossAttack = SpriteAnimation.fromFrameData(
       bossImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.15, textureSize: Vector2(48, 48), texturePosition: Vector2(0, 48)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.15,
+        textureSize: Vector2(48, 48),
+        texturePosition: Vector2(0, 48),
+      ),
     );
 
     _soulBoltAnimation = SpriteAnimation.fromFrameData(
       soulBoltImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.1, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.1,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _voidOrbAnimation = SpriteAnimation.fromFrameData(
       voidOrbImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.1, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.1,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _shardAnimation = SpriteAnimation.fromFrameData(
       shardImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.15, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0)),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.15,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+      ),
     );
     _slashAnimation = SpriteAnimation.fromFrameData(
       slashImg,
-      SpriteAnimationData.sequenced(amount: 4, stepTime: 0.06, textureSize: Vector2(32, 32), texturePosition: Vector2(0, 0), loop: false),
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.06,
+        textureSize: Vector2(32, 32),
+        texturePosition: Vector2(0, 0),
+        loop: false,
+      ),
     );
 
     // Map parsing
-    final mapPath = widget.isOverworld ? 'assets/tiles/overworld.tmx' : 'assets/tiles/level_${widget.levelId}.tmx';
+    final mapPath = widget.isOverworld
+        ? 'assets/tiles/overworld.tmx'
+        : 'assets/tiles/level_${widget.levelId}.tmx';
     final unlockedLevels = _saveService.getUnlockedLevels();
     _mapData = await MapLoader.load(
       mapPath,
@@ -213,7 +280,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
     // Compass radar timer
     if (!widget.isOverworld) {
-      _compassTimer = async.Timer.periodic(const Duration(milliseconds: 250), (_) {
+      _compassTimer = async.Timer.periodic(const Duration(milliseconds: 250), (
+        _,
+      ) {
         _updateCompass();
       });
     }
@@ -234,7 +303,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Aether Spring has fully restored your soul vessel & flasks!'),
+        content: Text(
+          'Aether Spring has fully restored your soul vessel & flasks!',
+        ),
         duration: Duration(seconds: 2),
         backgroundColor: Color(0xFF00E5FF),
       ),
@@ -267,7 +338,14 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
           children: [
             Icon(Icons.auto_stories, color: Color(0xFF00E5FF)),
             SizedBox(width: 10),
-            Text('CHRONICLES OF PURGATORY', style: TextStyle(color: Colors.white, fontSize: 16, letterSpacing: 1.5)),
+            Text(
+              'CHRONICLES OF PURGATORY',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                letterSpacing: 1.5,
+              ),
+            ),
           ],
         ),
         content: const Text(
@@ -280,7 +358,13 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('UNDERSTOOD', style: TextStyle(color: Color(0xFF00E5FF), fontWeight: FontWeight.bold)),
+            child: const Text(
+              'UNDERSTOOD',
+              style: TextStyle(
+                color: Color(0xFF00E5FF),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -310,16 +394,18 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
   void _onPortalTrigger(int targetLevelId) {
     if (widget.isOverworld) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => SoulrealmGameWidget(
-            levelId: targetLevelId,
-            isOverworld: false,
-          ),
-        ),
-      ).then((_) {
-        _initGameData();
-      });
+      Navigator.of(context)
+          .push(
+            MaterialPageRoute(
+              builder: (context) => SoulrealmGameWidget(
+                levelId: targetLevelId,
+                isOverworld: false,
+              ),
+            ),
+          )
+          .then((_) {
+            _initGameData();
+          });
     } else {
       _winLevel();
     }
@@ -362,7 +448,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
       }
     } else {
       // All pyres lit: point to exit Portal
-      final portal = _mapData.components.whereType<PortalComponent>().firstOrNull;
+      final portal = _mapData.components
+          .whereType<PortalComponent>()
+          .firstOrNull;
       if (portal != null) {
         final diff = portal.position - playerPos;
         final angle = math.atan2(diff.y, diff.x);
@@ -448,7 +536,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: Color(0xFF07090F),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF00E5FF))),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF00E5FF)),
+        ),
       );
     }
 
@@ -605,14 +695,8 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                 ),
               ),
             ],
-            components: [
-              ...gameplayComponents,
-              ..._mapData.components,
-            ],
-            cameraConfig: CameraConfig(
-              moveOnlyMapArea: true,
-              zoom: 1.5,
-            ),
+            components: [...gameplayComponents, ..._mapData.components],
+            cameraConfig: CameraConfig(moveOnlyMapArea: true, zoom: 1.5),
             colorFilter: widget.isOverworld
                 ? GameColorFilter(
                     color: const Color(0xFF4C5C8C).withValues(alpha: 0.25),
@@ -626,7 +710,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
               'hud': (context, game) {
                 _bonfireGame ??= game;
                 return HudOverlay(
-                  levelName: widget.isOverworld ? 'OVERWORLD' : 'STAGE ${widget.levelId}',
+                  levelName: widget.isOverworld
+                      ? 'OVERWORLD'
+                      : 'STAGE ${widget.levelId}',
                   hp: _playerHp,
                   maxHp: _maxHp,
                   mana: _playerMana,
@@ -660,9 +746,7 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
           // Fireworks layer for Level Won celebration
           if (_levelWon) ...[
             IgnorePointer(
-              child: FireworksDisplay(
-                controller: _fireworksController,
-              ),
+              child: FireworksDisplay(controller: _fireworksController),
             ),
             _buildLevelCompleteOverlay(),
           ],
@@ -683,14 +767,20 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
       builder: (context, setDialogState) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: const Color(0xFF0C0E1A),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.6), width: 1.5),
+              border: Border.all(
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
@@ -707,7 +797,11 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.pause_circle_filled, color: Color(0xFF00E5FF), size: 24),
+                        Icon(
+                          Icons.pause_circle_filled,
+                          color: Color(0xFF00E5FF),
+                          size: 24,
+                        ),
                         SizedBox(width: 10),
                         Text(
                           'EXPEDITION PAUSED',
@@ -721,7 +815,11 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white60, size: 20),
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.white60,
+                        size: 20,
+                      ),
                       onPressed: () {
                         game.resumeEngine();
                         Navigator.pop(context);
@@ -771,19 +869,30 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                           foregroundColor: Colors.redAccent,
                           side: const BorderSide(color: Colors.redAccent),
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () {
                           if (widget.isOverworld) {
                             final player = game.player;
                             if (player != null) {
-                              _saveService.saveOverworldPosition(player.position.x, player.position.y);
+                              _saveService.saveOverworldPosition(
+                                player.position.x,
+                                player.position.y,
+                              );
                             }
                           }
                           Navigator.pop(context);
                           Navigator.pop(context);
                         },
-                        child: const Text('ABANDON', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                        child: const Text(
+                          'ABANDON',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -794,13 +903,21 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                           backgroundColor: const Color(0xFF00E5FF),
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () {
                           game.resumeEngine();
                           Navigator.pop(context);
                         },
-                        child: const Text('RESUME RUN', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                        child: const Text(
+                          'RESUME RUN',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -828,7 +945,10 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
             children: [
               Icon(icon, size: 16, color: const Color(0xFF00E5FF)),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
+              ),
             ],
           ),
           Switch(
@@ -847,7 +967,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
     final rank = _starsEarned == 3 ? 'S' : (_starsEarned == 2 ? 'A' : 'B');
     final rankColor = _starsEarned == 3
         ? const Color(0xFFFFD700)
-        : (_starsEarned == 2 ? const Color(0xFF00E5FF) : const Color(0xFF7C4DFF));
+        : (_starsEarned == 2
+              ? const Color(0xFF00E5FF)
+              : const Color(0xFF7C4DFF));
 
     return Container(
       color: Colors.black.withValues(alpha: 0.8),
@@ -925,7 +1047,10 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
               // Run Recap Card
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF13172E),
                   borderRadius: BorderRadius.circular(14),
@@ -936,16 +1061,36 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('EXPEDITION TIME', style: TextStyle(color: Colors.white54, fontSize: 11)),
-                        Text('${_stopwatch.elapsed.inSeconds}s', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                        const Text(
+                          'EXPEDITION TIME',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                        Text(
+                          '${_stopwatch.elapsed.inSeconds}s',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('SHARDS HARVESTED', style: TextStyle(color: Colors.white54, fontSize: 11)),
-                        Text('+$_shardsCollectedThisRun', style: const TextStyle(color: Color(0xFF00E5FF), fontWeight: FontWeight.bold, fontSize: 12)),
+                        const Text(
+                          'SHARDS HARVESTED',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                        Text(
+                          '+$_shardsCollectedThisRun',
+                          style: const TextStyle(
+                            color: Color(0xFF00E5FF),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                     if (_totalPyres > 0) ...[
@@ -953,8 +1098,21 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('PYRES REKINDLED', style: TextStyle(color: Colors.white54, fontSize: 11)),
-                          Text('$_litPyres / $_totalPyres', style: const TextStyle(color: Color(0xFFFF9100), fontWeight: FontWeight.bold, fontSize: 12)),
+                          const Text(
+                            'PYRES REKINDLED',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                            ),
+                          ),
+                          Text(
+                            '$_litPyres / $_totalPyres',
+                            style: const TextStyle(
+                              color: Color(0xFFFF9100),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -970,7 +1128,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                     backgroundColor: const Color(0xFF00E5FF),
                     foregroundColor: Colors.black,
                     minimumSize: const Size.fromHeight(42),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.pushReplacement(
@@ -983,7 +1143,13 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                       ),
                     );
                   },
-                  child: const Text('NEXT STAGE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                  child: const Text(
+                    'NEXT STAGE',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -993,12 +1159,20 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white24),
                   minimumSize: const Size.fromHeight(42),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('RETURN TO MAP', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                child: const Text(
+                  'RETURN TO MAP',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1030,7 +1204,11 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.broken_image_outlined, color: Colors.redAccent, size: 36),
+              const Icon(
+                Icons.broken_image_outlined,
+                color: Colors.redAccent,
+                size: 36,
+              ),
               const SizedBox(height: 8),
               const Text(
                 'SOUL EXTINGUISHED',
@@ -1051,7 +1229,10 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
               if (shardsRetained > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF13172E),
                     borderRadius: BorderRadius.circular(10),
@@ -1060,11 +1241,19 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.diamond_outlined, color: Color(0xFF00E5FF), size: 16),
+                      const Icon(
+                        Icons.diamond_outlined,
+                        color: Color(0xFF00E5FF),
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Retained +$shardsRetained Shards in Vessel',
-                        style: const TextStyle(color: Color(0xFF00E5FF), fontSize: 11, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Color(0xFF00E5FF),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -1076,7 +1265,9 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                   backgroundColor: Colors.redAccent,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(42),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -1089,14 +1280,23 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
                     ),
                   );
                 },
-                child: const Text('RETRY STAGE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                child: const Text(
+                  'RETRY STAGE',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('QUIT TO MAP', style: TextStyle(color: Colors.white54, letterSpacing: 1.0)),
+                child: const Text(
+                  'QUIT TO MAP',
+                  style: TextStyle(color: Colors.white54, letterSpacing: 1.0),
+                ),
               ),
             ],
           ),
