@@ -108,7 +108,8 @@ class _LevelMapScreenState extends State<LevelMapScreen> with SingleTickerProvid
 
   Future<void> _loadProgress() async {
     await _saveService.init();
-    await _gamesServices.initialize();
+    // Run sign-in in background — don't block the map screen on auth
+    _gamesServices.initialize();
 
     setState(() {
       _unlockedLevels = _saveService.getUnlockedLevels();
