@@ -35,6 +35,7 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   final GamesServicesWrapper _gamesServices = GamesServicesWrapper();
 
   bool _loading = true;
+  String? _errorMessage;
   double _playerHp = 3.0;
   double _maxHp = 3.0;
   double _playerMana = 100.0;
@@ -93,7 +94,14 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
   @override
   void initState() {
     super.initState();
-    _initGameData();
+    _initGameData().catchError((e, st) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _errorMessage = '$e\n\n$st';
+        });
+      }
+    });
   }
 
   @override
@@ -539,6 +547,69 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
         backgroundColor: Color(0xFF07090F),
         body: Center(
           child: CircularProgressIndicator(color: Color(0xFF00E5FF)),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF07090F),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'FAILED TO LAUNCH',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00E5FF),
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _loading = true;
+                      _errorMessage = null;
+                    });
+                    _initGameData().catchError((e, st) {
+                      if (mounted) {
+                        setState(() {
+                          _loading = false;
+                          _errorMessage = '$e\n\n$st';
+                        });
+                      }
+                    });
+                  },
+                  child: const Text('RETRY'),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('BACK TO MAP', style: TextStyle(color: Colors.white54)),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
