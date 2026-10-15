@@ -105,7 +105,8 @@ class _SoulrealmGameWidgetState extends State<SoulrealmGameWidget> {
 
   Future<void> _initGameData() async {
     await _saveService.init();
-    await _gamesServices.initialize();
+    // Run games services sign-in in background — auth failures must not block loading
+    _gamesServices.initialize();
     await _saveService.incrementRuns();
 
     _maxHp = _saveService.getMaxHealth();
