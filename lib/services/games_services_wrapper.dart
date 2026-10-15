@@ -21,7 +21,12 @@ class GamesServicesWrapper {
     }
 
     try {
-      await GamesServices.signIn();
+      await GamesServices.signIn().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          developer.log("GamesServices: Sign-in timed out.");
+        },
+      );
       _isConnected = true;
       developer.log("GamesServices: Successfully signed in.");
     } catch (e) {
