@@ -27,13 +27,22 @@ class MapLoader {
     
     final dataElement = document.findAllElements('data').first;
     final csvText = dataElement.innerText.trim();
-    final tileIds = csvText.split(',').map((e) => int.parse(e.trim())).toList();
+    final tileIds = csvText
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .map(int.parse)
+        .toList();
 
     final List<Tile> tiles = [];
     final List<GameComponent> dynamicComponents = [];
     final List<Vector2> enemySpawnPoints = [];
     final List<Vector2> shardSpawnPoints = [];
     Vector2 playerSpawnPoint = Vector2(64, 64); // fallback spawn
+
+    // Tile size in pixels (must match the tileset tile dimensions)
+    const double tileW = 64.0;
+    const double tileH = 64.0;
 
     // Map origin offset to center it visually
     const double originX = 200.0;
@@ -56,14 +65,16 @@ class MapLoader {
         if (tileId != 0) {
           tiles.add(
             Tile(
-              x: screenX,
-              y: screenY - 16,
-              width: 64,
-              height: 64,
+              // Tile x/y are grid indices; Bonfire multiplies by width/height
+              x: screenX / tileW,
+              y: (screenY - 16) / tileH,
+              width: tileW,
+              height: tileH,
               sprite: TileSprite(
                 path: 'tileset.png',
-                position: Vector2(0, 0),
-                size: Vector2(64, 64),
+                // TileSprite position is col/row index (0-based)
+                position: Vector2(0, 0), // col 0 = floor tile
+                size: Vector2(tileW, tileH),
               ),
             ),
           );
@@ -83,14 +94,14 @@ class MapLoader {
           // Wall
           tiles.add(
             Tile(
-              x: screenX,
-              y: screenY - 16,
-              width: 64,
-              height: 64,
+              x: screenX / tileW,
+              y: (screenY - 16) / tileH,
+              width: tileW,
+              height: tileH,
               sprite: TileSprite(
                 path: 'tileset.png',
-                position: Vector2(64, 0),
-                size: Vector2(64, 64),
+                position: Vector2(1, 0), // col 1 = wall tile
+                size: Vector2(tileW, tileH),
               ),
               collisions: [
                 RectangleHitbox(
